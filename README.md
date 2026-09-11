@@ -22,6 +22,7 @@ Cada módulo vive en `modules/NN-nombre/` y tiene:
 | `*.ts` | Código ejecutable. Sin dependencias donde se puede; `docker-compose` donde hace falta infra real. |
 | `quiz.md` | Preguntas tipo entrevista. **Se responden antes de mirar las respuestas.** |
 | `respuestas.md` | Respuestas modelo + rúbrica (qué separa una respuesta de junior, de senior y de staff) + fuentes. |
+| `para-pensar.md` | Sólo en algunos módulos: las preguntas abiertas del final del README, resueltas con código. |
 
 Tus respuestas van en `mis-respuestas/NN.md` para poder compararlas más
 adelante y ver cómo evolucionó tu criterio.
@@ -49,8 +50,8 @@ Si tenés Node 20 o 22 viejo, instalá `tsx` una vez y usá `npx tsx archivo.ts`
 | - | ------ | ---- | ------ |
 | 01 | [Fundamentos](modules/01-fundamentos/) | Latencia, throughput, percentiles, Ley de Little, back-of-the-envelope, SLI/SLO | ✅ |
 | 02 | [Comunicación entre servicios](modules/02-comunicacion-servicios/) | Síncrono vs asíncrono, REST vs gRPC vs eventos, contratos y versionado | ✅ |
-| 03 | Escalabilidad | Vertical vs horizontal, load balancing, stateless, consistent hashing | ⏳ |
-| 04 | Caching | Redis, cache-aside vs write-through, invalidación, stampede, TTL con jitter | ⏳ |
+| 03 | [Escalabilidad](modules/03-escalabilidad/) | Vertical vs horizontal, load balancing, stateless, consistent hashing, IDs distribuidos | ✅ |
+| 04 | [Caching](modules/04-caching/) | Redis, cache-aside vs write-through, invalidación, stampede, evicción | ✅ |
 | 05 | Bases de datos | Índices, transacciones, aislamiento, réplicas, sharding, CAP/PACELC | ⏳ |
 | 06 | Consistencia y coordinación | Consistencia eventual, **idempotencia**, locks distribuidos, leader election | ⏳ |
 

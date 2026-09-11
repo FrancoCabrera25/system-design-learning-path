@@ -263,6 +263,11 @@ node modules/02-comunicacion-servicios/proto-vs-json.ts
   nueva del productor que agrega un campo. ¿Se rompe algo? ¿Y si en vez de
   agregar, **renombrás** el campo? ¿Y si cambiás el tipo de `int32` a `int64`?
 
+Las tres están resueltas —con código, no con prosa— en
+[`para-pensar.md`](para-pensar.md). Intentalas antes de abrirlo, y para la
+tercera corré `evolucion-contrato.ts`: vas a ver la corrupción silenciosa
+ocurrir sin que se lance ni un error.
+
 ## Fuentes
 
 - **Sam Newman**, *Building Microservices* (2ª ed.), caps. 4-5 — comunicación
