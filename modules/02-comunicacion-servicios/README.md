@@ -275,9 +275,12 @@ Las tres están resueltas —con código, no con prosa— en
 funciona el outbox por dentro** (polling vs `LISTEN/NOTIFY` vs CDC, y por qué
 el índice parcial es lo que evita saturar la base).
 
-Y si la pregunta es **qué broker usar** —Kafka, RabbitMQ o Redis Streams— y
-en qué se diferencia el outbox de *"llega un evento y lo guardo en la base"*,
-está todo en [`outbox-brokers.md`](outbox-brokers.md). Intentalas antes de abrirlo, y para la
+Y sobre el outbox hay dos documentos más:
+[`outbox-cuando.md`](outbox-cuando.md) — **cuándo hace falta y cuándo no**, y
+por qué no reemplaza a la saga — y
+[`outbox-brokers.md`](outbox-brokers.md) — **qué cambia con Kafka, RabbitMQ o
+Redis Streams**, y en qué se diferencia de *"llega un evento y lo guardo en la
+base"*. Intentalas antes de abrirlo, y para la
 tercera corré `evolucion-contrato.ts`: vas a ver la corrupción silenciosa
 ocurrir sin que se lance ni un error.
 
