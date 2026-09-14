@@ -289,6 +289,8 @@ node modules/03-escalabilidad/ids-distribuidos.ts
   respuestas de un LLM. ¿Qué va a pasar en un pico de tráfico? ¿Qué métrica
   usarías en su lugar?
 
+Las tres están resueltas en [`para-pensar.md`](para-pensar.md).
+
 ## Fuentes
 
 - **Mitzenmacher**, *The Power of Two Choices in Randomized Load Balancing*

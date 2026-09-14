@@ -281,6 +281,8 @@ node modules/04-caching/evicciones.ts
 - Se cae Redis por completo. ¿Tu sistema se degrada o se cae? ¿Qué número
   necesitás saber para responder eso **antes** de que pase?
 
+Las tres están resueltas en [`para-pensar.md`](para-pensar.md).
+
 ## Fuentes
 
 - **Facebook**, *Scaling Memcache at Facebook* (NSDI 2013) — stampede, leases

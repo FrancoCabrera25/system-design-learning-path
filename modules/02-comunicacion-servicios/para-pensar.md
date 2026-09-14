@@ -454,3 +454,230 @@ Ese script serializa un mensaje con el schema viejo, lo decodifica con cuatro
 schemas nuevos distintos, y te muestra cuál sobrevive y cuál corrompe los
 datos **sin lanzar ni un error**. Ver la corrupción silenciosa en tu propia
 terminal es bastante más convincente que leerla.
+
+---
+
+## Apéndice — Cómo funciona el outbox por dentro
+
+> *"¿El patrón guarda en la base de datos y de ahí toma el evento a Kafka?
+> ¿O es por intervalo? ¿No saturamos la base?"*
+
+Sí a lo primero, y las otras dos preguntas son exactamente las correctas.
+
+### A.1 El flujo, completo
+
+```
+   ┌─────────────────────── UNA sola transacción de Postgres ───────┐
+   │  BEGIN                                                          │
+   │    INSERT INTO orders  (...)          <- el dato del negocio    │
+   │    INSERT INTO outbox  (...)          <- el evento, como FILA   │
+   │  COMMIT                                                         │
+   └─────────────────────────────────────────────────────────────────┘
+                                │
+                                │  (2) otro proceso lo lee
+                                ▼
+                       ┌──────────────────┐
+                       │    PUBLISHER     │ ──(3) publica──►  Kafka
+                       └──────────────────┘
+                                │
+                                │  (4) marca la fila como publicada
+                                ▼
+                        UPDATE outbox SET published_at = now()
+```
+
+El punto entero del patrón está en el paso 1: **el evento no se publica, se
+escribe como una fila más, en la misma transacción que el dato**. Por eso es
+atómico — Postgres garantiza que o quedan las dos filas o no queda ninguna.
+No hay ningún estado intermedio posible donde la orden exista y el evento no.
+
+Los pasos 2-4 son **el transporte**, y ahí sí hay dos implementaciones
+distintas.
+
+### A.2 Opción A — Polling publisher (por intervalo)
+
+```ts
+// Corre en UN proceso (o en varios, ver A.4). NO en todos los pods de la API.
+@Interval(200)
+async publicar() {
+  const pendientes = await this.db.query(`
+    SELECT id, topic, payload
+    FROM outbox
+    WHERE published_at IS NULL
+    ORDER BY id
+    LIMIT 100
+    FOR UPDATE SKIP LOCKED      -- para poder correr varios publishers
+  `);
+
+  for (const ev of pendientes) {
+    await this.kafka.emit(ev.topic, ev.payload);
+    await this.db.query(`UPDATE outbox SET published_at = now() WHERE id = $1`, [ev.id]);
+  }
+}
+```
+
+**¿Esto no satura la base?** La respuesta corta es **no, si está bien hecho —
+y sí, espectacularmente, si está mal hecho.** La diferencia son dos cosas.
+
+**1. El índice parcial.** Ésta es la pieza clave y la que casi nadie pone:
+
+```sql
+CREATE INDEX idx_outbox_pendientes
+  ON outbox (id)
+  WHERE published_at IS NULL;    -- <-- el WHERE es lo importante
+```
+
+Un índice parcial **sólo contiene las filas que cumplen la condición**. Como
+los eventos se publican en milisegundos, en ese índice viven **decenas de
+filas**, no millones. La query del publisher es un *index scan* sobre un
+índice diminuto que está permanentemente en memoria: **microsegundos**, no
+importa si la tabla `outbox` tiene 500 millones de filas históricas.
+
+Sin ese índice parcial —con un índice común sobre `published_at`, o sin
+índice— la query hace un *seq scan* sobre una tabla que crece para siempre.
+**Ahí sí saturás la base**, y el problema empeora todos los días. Es la
+diferencia entre un patrón que funciona durante años y un incidente
+programado.
+
+**2. Borrar (o particionar) lo publicado.** La tabla `outbox` **no es un
+historial**: es una bandeja de salida. Lo que ya salió, se va.
+
+```sql
+-- opción simple: un job que limpia lo viejo
+DELETE FROM outbox WHERE published_at < now() - interval '3 days';
+
+-- opción mejor a alto volumen: particionar por día y DROP de la partición,
+-- que es instantáneo y no genera trabajo para el VACUUM
+```
+
+Si querés el historial de eventos, ése es el trabajo de Kafka (con
+`retention` largo) o de una tabla de auditoría aparte. Mezclar las dos cosas
+es el segundo error más común del patrón.
+
+**El costo real, con números.** Corré `outbox-polling.ts` para ver la
+cuenta, pero el orden de magnitud es éste: un publisher que hace *polling*
+cada 200 ms son **5 queries por segundo**. Si tu aplicación ya hace 3.000
+queries/s, el publisher es el **0,17%** de la carga. Es ruido.
+
+Lo que sí cuesta es el patrón mal implementado: sin índice parcial, sin
+limpieza, y con los 20 pods de la API polleando en vez de un publisher
+dedicado.
+
+### A.3 El intervalo es un trade-off (y hay una tercera opción)
+
+El intervalo define la **latencia** que le agregás al evento:
+
+| Intervalo | Latencia p50 | Latencia peor caso | Queries/s |
+| --- | --- | --- | --- |
+| 1 s | 500 ms | 1 s | 1 |
+| 200 ms | 100 ms | 200 ms | 5 |
+| 50 ms | 25 ms | 50 ms | 20 |
+
+Bajar el intervalo baja la latencia y sube las queries **vacías** (polls que
+no encuentran nada). A 50 ms con tráfico bajo, el 95% de los polls no
+devuelven ninguna fila: son gratis en carga pero no son elegantes.
+
+**La tercera opción, que da lo mejor de los dos mundos:
+`LISTEN` / `NOTIFY` de Postgres.**
+
+```sql
+-- Un trigger avisa al publisher en cuanto se commitea un evento
+CREATE OR REPLACE FUNCTION notificar_outbox() RETURNS trigger AS $$
+BEGIN
+  PERFORM pg_notify('outbox', '');
+  RETURN NEW;
+END; $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER outbox_notify AFTER INSERT ON outbox
+  FOR EACH ROW EXECUTE FUNCTION notificar_outbox();
+```
+
+```ts
+// El publisher duerme hasta que lo despiertan, y pollea cada 5 s por las dudas
+await this.pgClient.query('LISTEN outbox');
+this.pgClient.on('notification', () => this.publicar());
+setInterval(() => this.publicar(), 5000);   // <-- red de seguridad
+```
+
+Latencia de **milisegundos** y **0,2 queries/s** de polling. El `setInterval`
+lento se queda igual como red de seguridad: `NOTIFY` es *best effort* (si el
+publisher estaba reconectando, se pierde el aviso), así que el poll garantiza
+que ningún evento quede varado para siempre. **Notificación para la latencia,
+polling para la garantía.**
+
+### A.4 Opción B — CDC: leer el log de la base (Debezium)
+
+En vez de consultar la tabla, un conector lee el **WAL** (el log de
+transacciones que Postgres escribe igual, para su propia replicación) y
+publica en Kafka cada cambio.
+
+```
+Postgres ──WAL──► Debezium ──► Kafka
+   (la app no hace nada más que el INSERT)
+```
+
+| | Polling | CDC (Debezium) |
+| --- | --- | --- |
+| Carga sobre la base | Baja si hay índice parcial | Mínima: se comporta como una réplica |
+| Latencia | Intervalo/2 (o ms con NOTIFY) | Milisegundos |
+| Infraestructura | **Ninguna** | Kafka Connect + Debezium + un slot de replicación |
+| Orden | Lo garantizás vos con `ORDER BY id` | Garantizado: es el orden del log |
+| Riesgo operativo | Bajo y obvio | **Un slot de replicación atascado le llena el disco a la base** |
+
+Ese último punto merece un párrafo, porque es la trampa de CDC que se
+descubre tarde: Postgres **no puede borrar el WAL que un slot de replicación
+todavía no consumió**. Si Debezium se cae un fin de semana y nadie mira, el
+WAL crece hasta llenar el disco **y la base deja de aceptar escrituras**. Es
+decir: agregaste un componente que, al fallar, **te tumba la base de datos que
+venías protegiendo**. Se maneja con `max_slot_wal_keep_size` y alertas sobre
+el lag del slot, pero hay que saberlo de antemano.
+
+**Cuándo cada uno:**
+
+- **Polling** si tenés un equipo chico, no querés operar Kafka Connect, y una
+  latencia de 100-200 ms está bien. **Es el default correcto para el 90% de
+  los casos**, y con `NOTIFY` ni siquiera pagás la latencia.
+- **CDC** si ya tenés Kafka Connect andando, si necesitás latencia de
+  milisegundos garantizada, o si querés capturar cambios de tablas que **no**
+  están bajo tu control (integrar un sistema legacy sin tocar su código —
+  ése es el caso donde CDC brilla y no tiene alternativa).
+
+### A.5 Los cinco detalles que definen si funciona en producción
+
+1. **El publisher es un proceso aparte, no tus 20 pods de la API.** Si cada
+   pod pollea, multiplicás la carga por 20 y todos compiten por las mismas
+   filas. Un `Deployment` dedicado con 1-2 réplicas, o un *sidecar*.
+2. **Varios publishers se coordinan con `FOR UPDATE SKIP LOCKED`.** Cada uno
+   toma un lote distinto sin pisarse y sin ningún lock distribuido. Es la
+   cláusula de Postgres que hace que este patrón escale sin Redis ni
+   ZooKeeper. (Ojo: con varios publishers **perdés el orden global**; si
+   necesitás orden por agregado, particioná el polling por `aggregate_id`.)
+3. **Es at-least-once, siempre.** Si el proceso muere entre el `emit` y el
+   `UPDATE`, el evento se republica. **No hay forma de evitarlo** — y por eso
+   el outbox y el consumidor idempotente (sección 2.3) son **el mismo
+   patrón**: uno no sirve sin el otro. Y no intentes invertir el orden:
+   marcar como publicado antes de publicar convierte "duplicado" en
+   "perdido", que es mucho peor.
+4. **Alertá sobre la antigüedad del evento pendiente más viejo**, no sobre la
+   cantidad de filas:
+   ```sql
+   SELECT now() - min(created_at) FROM outbox WHERE published_at IS NULL;
+   ```
+   Es el *lag* del outbox. Si el publisher se muere, los eventos se acumulan
+   en silencio: las órdenes se crean bien, nadie ve un error, y **el envío no
+   se reserva nunca**. Sin esta alerta te enterás por un cliente.
+5. **El `payload` se escribe al momento del commit, no se rearma después.**
+   Guardá el evento ya serializado. Si el publisher tuviera que ir a buscar la
+   orden para armar el evento, leería el estado **actual** y no el del momento
+   del hecho — y perdiste la semántica de "evento".
+
+### A.6 Probalo
+
+```bash
+node modules/02-comunicacion-servicios/outbox-polling.ts
+```
+
+Simula el publisher con distintos intervalos y tamaños de lote, y muestra la
+latencia de entrega, las queries por segundo contra la base y el porcentaje
+de polls vacíos. Después compara contra `LISTEN/NOTIFY` y contra CDC, y te
+muestra qué pasa cuando llega una ráfaga de 50.000 eventos de golpe: ahí
+aparece el parámetro que casi nadie calibra, que es el **tamaño del lote**.
