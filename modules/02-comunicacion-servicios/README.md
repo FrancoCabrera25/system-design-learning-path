@@ -245,7 +245,14 @@ node modules/02-comunicacion-servicios/proto-vs-json.ts
    arquitecturas (cadena síncrona, paralelo con degradación, asíncrona con
    cola) y mide disponibilidad efectiva, latencia p99 y qué pasa cuando una
    dependencia se degrada. Es el módulo 01 aplicado a una decisión concreta.
-2. **`proto-vs-json.ts`** — implementa un encoder de Protobuf mínimo (varint
+2. **`evolucion-contrato.ts`** — decodifica los mismos bytes con cinco
+   schemas distintos de consumidor y muestra cuál sobrevive y cuál corrompe
+   los datos sin lanzar ningún error.
+3. **`outbox-polling.ts`** — el publisher del outbox: latencia, queries/s
+   contra la base y el techo `lote / intervalo`.
+4. **`dual-write.ts`** — cuántas órdenes por día quedan rotas con cada
+   diseño de doble escritura. La respuesta no es "casi ninguna".
+5. **`proto-vs-json.ts`** — implementa un encoder de Protobuf mínimo (varint
    + campos con longitud) desde cero, y compara tamaño y tiempo de
    serialización contra JSON sobre el mismo mensaje. Escribir el varint a
    mano es la manera más rápida de entender por qué protobuf es chico y por
@@ -264,7 +271,13 @@ node modules/02-comunicacion-servicios/proto-vs-json.ts
   agregar, **renombrás** el campo? ¿Y si cambiás el tipo de `int32` a `int64`?
 
 Las tres están resueltas —con código, no con prosa— en
-[`para-pensar.md`](para-pensar.md). Intentalas antes de abrirlo, y para la
+[`para-pensar.md`](para-pensar.md), que además trae un apéndice sobre **cómo
+funciona el outbox por dentro** (polling vs `LISTEN/NOTIFY` vs CDC, y por qué
+el índice parcial es lo que evita saturar la base).
+
+Y si la pregunta es **qué broker usar** —Kafka, RabbitMQ o Redis Streams— y
+en qué se diferencia el outbox de *"llega un evento y lo guardo en la base"*,
+está todo en [`outbox-brokers.md`](outbox-brokers.md). Intentalas antes de abrirlo, y para la
 tercera corré `evolucion-contrato.ts`: vas a ver la corrupción silenciosa
 ocurrir sin que se lance ni un error.
 
