@@ -24,6 +24,14 @@ Cada módulo vive en `modules/NN-nombre/` y tiene:
 | `respuestas.md` | Respuestas modelo + rúbrica (qué separa una respuesta de junior, de senior y de staff) + fuentes. |
 | `para-pensar.md` | Sólo en algunos módulos: las preguntas abiertas del final del README, resueltas con código. |
 
+Algunos módulos traen además documentos sueltos sobre un tema que pedía más
+profundidad. Los que hay hoy:
+
+| Documento | De qué trata |
+| --- | --- |
+| [`outbox-cuando.md`](modules/02-comunicacion-servicios/outbox-cuando.md) | Cuándo hace falta el patrón outbox y cuándo no, y por qué no reemplaza a la saga |
+| [`outbox-brokers.md`](modules/02-comunicacion-servicios/outbox-brokers.md) | El outbox con Kafka, RabbitMQ y Redis Streams: qué cambia con cada uno |
+
 Tus respuestas van en `mis-respuestas/NN.md` para poder compararlas más
 adelante y ver cómo evolucionó tu criterio.
 

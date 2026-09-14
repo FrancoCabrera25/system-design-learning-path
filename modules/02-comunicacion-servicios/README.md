@@ -14,6 +14,17 @@ qué acá usaste una cola y allá una llamada gRPC?"*.
 
 La respuesta mala es "porque es más escalable". La buena tiene un número.
 
+## Material de este módulo
+
+| Archivo | Qué es |
+| --- | --- |
+| Este `README.md` | La teoría del módulo |
+| [`quiz.md`](quiz.md) · [`respuestas.md`](respuestas.md) | 20 preguntas de entrevista y las respuestas modelo con rúbrica |
+| [`para-pensar.md`](para-pensar.md) | Las preguntas abiertas del final, resueltas con código. **Incluye el apéndice de cómo funciona el outbox por dentro** (polling vs `LISTEN/NOTIFY` vs CDC) |
+| [`outbox-cuando.md`](outbox-cuando.md) | **Cuándo hace falta outbox y cuándo no**, y por qué no reemplaza a la saga |
+| [`outbox-brokers.md`](outbox-brokers.md) | **Outbox con Kafka, RabbitMQ o Redis Streams**: qué cambia con cada uno |
+| 5 archivos `.ts` | Los ejemplos ejecutables (ver *Lo que vas a correr*) |
+
 ## Teoría mínima
 
 ### 1. El eje que importa: acoplamiento temporal
