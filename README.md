@@ -60,7 +60,7 @@ Si tenés Node 20 o 22 viejo, instalá `tsx` una vez y usá `npx tsx archivo.ts`
 | 02 | [Comunicación entre servicios](modules/02-comunicacion-servicios/) | Síncrono vs asíncrono, REST vs gRPC vs eventos, contratos y versionado | ✅ |
 | 03 | [Escalabilidad](modules/03-escalabilidad/) | Vertical vs horizontal, load balancing, stateless, consistent hashing, IDs distribuidos | ✅ |
 | 04 | [Caching](modules/04-caching/) | Redis, cache-aside vs write-through, invalidación, stampede, evicción | ✅ |
-| 05 | Bases de datos | Índices, transacciones, aislamiento, réplicas, sharding, CAP/PACELC | ⏳ |
+| 05 | [Bases de datos](modules/05-bases-de-datos/) | Índices, transacciones, aislamiento, MVCC, réplicas, CAP/PACELC, migraciones sin downtime | ✅ |
 | 06 | Consistencia y coordinación | Consistencia eventual, **idempotencia**, locks distribuidos, leader election | ⏳ |
 
 ### Fase 2 — Sistemas distribuidos aplicados
