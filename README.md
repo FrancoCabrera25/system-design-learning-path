@@ -67,7 +67,7 @@ Si tenés Node 20 o 22 viejo, instalá `tsx` una vez y usá `npx tsx archivo.ts`
 
 | # | Módulo | Tema | Estado |
 | - | ------ | ---- | ------ |
-| 07 | Mensajería y event-driven | **Kafka** a fondo: particiones, orden, consumer groups, offsets, exactly-once | ⏳ |
+| 07 | [Kafka a fondo](modules/07-kafka/) | Particiones como unidad de paralelismo, claves y orden, consumer groups, rebalances, lag, compactación | ✅ |
 | 08 | Fiabilidad | Timeouts, retries con backoff+jitter, circuit breaker, bulkhead, DLQ | ⏳ |
 | 09 | Patrones de datos distribuidos | Outbox/Inbox, Saga, CQRS, event sourcing | ⏳ |
 | 10 | Observabilidad | Logs/métricas/traces, OpenTelemetry, RED/USE, alertas que sirven | ⏳ |
