@@ -68,7 +68,7 @@ Si tenés Node 20 o 22 viejo, instalá `tsx` una vez y usá `npx tsx archivo.ts`
 | # | Módulo | Tema | Estado |
 | - | ------ | ---- | ------ |
 | 07 | [Kafka a fondo](modules/07-kafka/) | Particiones como unidad de paralelismo, claves y orden, consumer groups, rebalances, lag, compactación | ✅ |
-| 08 | Fiabilidad | Timeouts, retries con backoff+jitter, circuit breaker, bulkhead, DLQ | ⏳ |
+| 08 | [Fiabilidad](modules/08-fiabilidad/) | Timeouts, backoff con jitter, retry budget, circuit breaker, bulkhead, fallos metaestables | ✅ |
 | 09 | Patrones de datos distribuidos | Outbox/Inbox, Saga, CQRS, event sourcing | ⏳ |
 | 10 | Observabilidad | Logs/métricas/traces, OpenTelemetry, RED/USE, alertas que sirven | ⏳ |
 
@@ -84,6 +84,10 @@ Si tenés Node 20 o 22 viejo, instalá `tsx` una vez y usá `npx tsx archivo.ts`
 
 ### Transversal
 
+- [`casos/`](casos/) — **casos reales**: el problema concreto, la solución que
+  ya está probada en producción, el código completo, y **por qué se hace así y
+  no de las otras tres formas que parecen razonables**. Los módulos explican
+  por qué las cosas se rompen; esta carpeta, qué se hace al respecto.
 - [`interview/`](interview/) — el **método** para responder una entrevista de
   system design (no el contenido: el proceso) y el banco de preguntas.
 
@@ -93,6 +97,9 @@ Si tenés Node 20 o 22 viejo, instalá `tsx` una vez y usá `npx tsx archivo.ts`
 2. Corré el código. Cambiale los números. Rompelo a propósito.
 3. Respondé el `quiz.md` **sin mirar** `respuestas.md`, escribiendo en
    `mis-respuestas/NN.md`.
+3bis. Si el módulo tiene un caso en [`casos/`](casos/), leelo: ahí está la
+   implementación completa del patrón y por qué se descartaron las
+   alternativas.
 4. Recién ahí abrí `respuestas.md` y compará contra la rúbrica.
 5. Lo que fallaste, volvé a la sección de teoría correspondiente.
 
