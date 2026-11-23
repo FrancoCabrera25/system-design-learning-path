@@ -30,22 +30,33 @@ defenderlo en una entrevista y no abandonarlo en el primer problema.**
 
 ## Los casos
 
-| # | Caso | El problema en una línea | Módulos | |
-| - | ---- | ------------------------ | ------- | - |
-| 01 | [El evento que nunca salió](01-outbox-el-evento-que-nunca-salio.md) | La orden existe, el envío nunca se reserva, y no hay ningún error en ningún log | 02, 06 | ✅ |
-| 02 | [El cobro duplicado que no figura en ningún log](02-idempotencia-cobro-duplicado.md) | Un `UNIQUE` impecable y aun así le cobraste dos veces | 06, 05 | ✅ |
-| 03 | [El pago que salió bien y el envío que falló](03-saga-pago-cobrado-sin-envio.md) | Ya cobraste. No hay rollback. ¿Y ahora? | 09, 02 | ✅ |
-| 04 | El tenant que rompió el pipeline | Un cliente nuevo y el lag de una partición crece para siempre | 07, 03 | ⏳ |
-| 05 | El checkout que se cayó por las recomendaciones | Un servicio no crítico tumbó el crítico sin que se tocaran | 08, 01 | ⏳ |
-| 06 | El 500 que no se va | El pico pasó hace media hora y el sistema sigue roto | 08, 01 | ⏳ |
-| 07 | "A veces no se guarda" | El `POST` devuelve 200 y el `GET` devuelve el dato viejo | 05 | ⏳ |
-| 08 | La ampliación del caché que tiró la base | Agregaste un nodo de Redis y se cayó Postgres | 04, 03 | ⏳ |
-| 09 | De 4 a 6 shards sin downtime | El 67% de los datos tiene que cambiar de máquina | 05, 03 | ⏳ |
-| 10 | El bucle del agente que se puede reanudar | El pod se recicla a los 30 s de una generación de 40 s | 06, 14 | ⏳ |
+| # | Caso | El problema en una línea | Módulos |
+| - | ---- | ------------------------ | ------- |
+| 01 | [El evento que nunca salió](01-outbox-el-evento-que-nunca-salio.md) | La orden existe, el envío nunca se reserva, y no hay ningún error en ningún log | 02, 06 |
+| 02 | [El cobro duplicado que no figura en ningún log](02-idempotencia-cobro-duplicado.md) | Un `UNIQUE` impecable y aun así le cobraste dos veces | 06, 05 |
+| 03 | [El pago que salió bien y el envío que falló](03-saga-pago-cobrado-sin-envio.md) | Ya cobraste. No hay rollback. Y la saga no falla: se cuelga | 09, 02 |
+| 04 | [El tenant que rompió el pipeline](04-kafka-particion-caliente.md) | Escalaste a 48 réplicas y 96 particiones, y el lag sigue creciendo | 07, 03 |
+| 05 | [El checkout que se cayó por las recomendaciones](05-bulkhead-dependencia-no-critica.md) | Un servicio no crítico tumbó el crítico sin que se tocaran | 08, 01 |
+| 06 | [El 500 que no se va](06-retry-storm-colapso-metaestable.md) | El pico pasó hace media hora y el sistema sigue roto | 08, 01 |
+| 07 | ["A veces no se guarda"](07-replication-lag-a-veces-no-se-guarda.md) | El `POST` devuelve 200, el `GET` devuelve el dato viejo, y no es reproducible | 05 |
+| 08 | [La ampliación del caché que tiró la base](08-cache-ampliacion-que-tiro-la-base.md) | Agregaste un nodo de Redis para aliviar la base y la base se murió | 04, 03 |
+| 09 | [De 4 a 6 shards sin downtime](09-migracion-de-shards-sin-downtime.md) | El 67% de los datos tiene que cambiar de máquina, sin ventana | 05, 03 |
+| 10 | [El bucle del agente que se puede reanudar](10-agente-ia-bucle-reanudable.md) | El pod se recicla a los 30 s de un bucle de 4 minutos, y pagás todo de nuevo | 06, 07, 14 |
 
-Los tres primeros son los patrones que más se preguntan y los que más se
-implementan a medias. El resto va saliendo a medida que avanzan los módulos
-correspondientes.
+### Por si estás buscando un patrón concreto
+
+| Patrón | Caso |
+| --- | --- |
+| Transactional Outbox | [01](01-outbox-el-evento-que-nunca-salio.md) |
+| Idempotency Key | [02](02-idempotencia-cobro-duplicado.md), [10](10-agente-ia-bucle-reanudable.md) |
+| Saga con compensaciones | [03](03-saga-pago-cobrado-sin-envio.md) |
+| Clave de partición | [04](04-kafka-particion-caliente.md) |
+| Bulkhead · Circuit breaker | [05](05-bulkhead-dependencia-no-critica.md) |
+| Retry budget · Load shedding | [06](06-retry-storm-colapso-metaestable.md) |
+| Read-your-writes | [07](07-replication-lag-a-veces-no-se-guarda.md) |
+| Consistent hashing · Single-flight | [08](08-cache-ampliacion-que-tiro-la-base.md) |
+| Shards lógicos · expand/migrate/contract | [09](09-migracion-de-shards-sin-downtime.md) |
+| Durable execution | [10](10-agente-ia-bucle-reanudable.md) |
 
 ## Cómo usarlos
 
