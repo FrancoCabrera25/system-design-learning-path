@@ -69,7 +69,7 @@ Si tenés Node 20 o 22 viejo, instalá `tsx` una vez y usá `npx tsx archivo.ts`
 | - | ------ | ---- | ------ |
 | 07 | [Kafka a fondo](modules/07-kafka/) | Particiones como unidad de paralelismo, claves y orden, consumer groups, rebalances, lag, compactación | ✅ |
 | 08 | [Fiabilidad](modules/08-fiabilidad/) | Timeouts, backoff con jitter, retry budget, circuit breaker, bulkhead, fallos metaestables | ✅ |
-| 09 | Patrones de datos distribuidos | Outbox/Inbox, Saga, CQRS, event sourcing | ⏳ |
+| 09 | [Patrones de datos distribuidos](modules/09-datos-distribuidos/) | Outbox, Saga (ACD, contramedidas de aislamiento), CQRS por niveles, event sourcing y su versionado | ✅ |
 | 10 | Observabilidad | Logs/métricas/traces, OpenTelemetry, RED/USE, alertas que sirven | ⏳ |
 
 ### Fase 3 — Arquitectura, cloud y IA

@@ -94,6 +94,27 @@ tiene ventaja sobre alguien que estudió un libro.
 | ☐ | El primer request falló a la mitad. Llega el reintento. ¿Qué hacés? | 06, 09 |
 | ☐ | ¿Cómo hacés idempotente un consumer de Kafka? ¿Y si el efecto es llamar a una API externa? | 06, 07 |
 
+### Patrones de datos distribuidos (saga, CQRS, event sourcing)
+
+| ✅ | Pregunta | Módulo |
+| --- | --- | --- |
+| ☐ | ¿Qué problema resuelve cada uno: outbox, saga, CQRS, event sourcing? Una frase cada uno | 09 |
+| ☐ | Una saga es ACD, no ACID. ¿Qué letra falta y qué anomalías trae? | 09 |
+| ☐ | ¿Coreografía u orquestación? Dame un criterio, no "depende" | 09 |
+| ☐ | ¿Por qué una compensación no es un rollback? Un ejemplo que se vea a ojo | 09 |
+| ☐ | La compensación del paso 2 falla. ¿Qué estado queda y quién lo arregla? | 09 |
+| ☐ | ¿Por qué el último paso de una saga nunca debería necesitar compensación? | 09 |
+| ☐ | ¿Qué es *exactamente* CQRS? ¿Dos services sobre la misma tabla ya es CQRS? | 09 |
+| ☐ | Con CQRS y proyección aparte, el usuario no ve lo que acaba de crear. Soluciones | 09, 05 |
+| ☐ | ¿Por qué el lag de una proyección es un orden de magnitud peor que el de una réplica? | 09, 07 |
+| ☐ | ¿Cuándo **no** usarías event sourcing? | 09 |
+| ☐ | Cargar un agregado tarda 4 s. ¿Cada cuántos eventos tomás snapshot y cómo lo calculás? | 09 |
+| ☐ | Cambia el esquema de un evento guardado hace 3 años. ¿Qué hacés? | 09 |
+| ☐ | ¿Por qué un snapshot puede volverse incorrecto sin que nadie toque la base? | 09 |
+| ☐ | Reconstruir la proyección tarda 1 hora. ¿Cómo evitás 1 hora de downtime de lectura? | 09 |
+| ☐ | ¿Qué te da Temporal/Step Functions que una tabla `saga_state` no, y qué perdés? | 09 |
+| ☐ | Outbox vs CDC/Debezium: ¿dónde está el riesgo operativo de cada uno? | 02, 09 |
+
 ### AWS
 
 | ✅ | Pregunta | Módulo |
